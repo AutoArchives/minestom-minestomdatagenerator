@@ -65,7 +65,7 @@ public final class MaterialGenerator extends DataGenerator {
     }
 
     private static HolderLookup.Provider applyPendingComponents() {
-        HolderLookup.Provider lookup = VanillaRegistries.createLookup();
+        HolderLookup.Provider lookup = VanillaRegistries.createWorldLookup();
         var registry = BuiltInRegistries.DATA_COMPONENT_INITIALIZERS.build(lookup);
         registry.forEach(DataComponentInitializers.PendingComponents::apply);
         return lookup;

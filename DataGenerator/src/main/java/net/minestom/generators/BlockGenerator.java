@@ -148,14 +148,12 @@ public final class BlockGenerator extends DataGenerator {
         appendState(blockJson, state, "occludes", blockState.canOcclude(), boolean.class);
         appendState(blockJson, state, "requiresTool", blockState.requiresCorrectToolForDrops(), boolean.class);
 
-        appendState(blockJson, state, "blocksMotion", blockState.blocksMotion(), boolean.class);
         appendState(blockJson, state, "flammable", isFlammable(blockState), boolean.class);
         appendState(blockJson, state, "air", blockState.isAir(), false, boolean.class);
         appendState(blockJson, state, "liquid", blockState.liquid(), false, boolean.class);
         appendState(blockJson, state, "fluid", !blockState.getFluidState().isEmpty(), false, boolean.class);
         appendState(blockJson, state, "replaceable", blockState.canBeReplaced(), false, boolean.class);
         appendState(blockJson, state, "solid", blockState.isSolid(), boolean.class);
-        appendState(blockJson, state, "solidBlocking", blockState.blocksMotion(), boolean.class);
         appendState(blockJson, state, "lightBlock", blockState.getLightDampening(), int.class);
         // Sounds
         SoundType soundType = blockState.getSoundType();
