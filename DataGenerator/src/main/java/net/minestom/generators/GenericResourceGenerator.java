@@ -57,10 +57,12 @@ public class GenericResourceGenerator extends DataGenerator {
             // only collect valid files
             if (content.length() > 0 && fileName.endsWith(".json")) {
                 var key = "minecraft:" + fileName.substring(0, fileName.length() - 5);
-                var jsonObject = gson.fromJson(content.toString(), JsonObject.class);
-                exclusions.forEach(jsonObject::remove);
+                var json = gson.fromJson(content.toString(), JsonElement.class);
+                if (json instanceof JsonObject jsonObject) {
+                    exclusions.forEach(jsonObject::remove);
+                }
 
-                result.add(key, jsonObject);
+                result.add(key, json);
             }
         }
 

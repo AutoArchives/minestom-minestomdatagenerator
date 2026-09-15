@@ -1,5 +1,6 @@
 package net.minestom.datagen;
 
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.stream.JsonReader;
 import net.minecraft.SharedConstants;
@@ -10,6 +11,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -55,22 +57,22 @@ public abstract class DataGenerator {
 
     protected JsonObject mergePath(Path directory) {
         final JsonObject result = new JsonObject();
-        try {
-            Files.walk(directory).filter(Files::isRegularFile)
+        try (var paths = Files.walk(directory)) {
+            paths.filter(Files::isRegularFile)
                     .forEach(path -> {
-                        try {
-                            JsonObject blockLootTable = DataGen.GSON.fromJson(new JsonReader(Files.newBufferedReader(path)), JsonObject.class);
+                        try (var reader = Files.newBufferedReader(path);
+                             var jsonReader = new JsonReader(reader)) {
+                            JsonElement value = DataGen.GSON.fromJson(jsonReader, JsonElement.class);
                             final String fileName = directory.relativize(path).toString();
                             final String tableName = (File.separatorChar == '\\' ? fileName.replace('\\', '/') : fileName)
                                     .replace(".json", "");
-                            result.add("minecraft:" + tableName, blockLootTable);
+                            result.add("minecraft:" + tableName, value);
                         } catch (IOException e) {
-                            LOGGER.error("Failed to read block loot table located at '" + path + "'.", e);
-                            e.printStackTrace();
+                            throw new UncheckedIOException("Failed to read generated resource '" + path + "'", e);
                         }
                     });
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new UncheckedIOException("Failed to read generated resource directory '" + directory + "'", e);
         }
         return result;
     }

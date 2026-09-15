@@ -1,10 +1,11 @@
 package net.minestom.utils;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.jar.JarFile;
 
@@ -16,16 +17,22 @@ public class ResourceUtils {
      * Get a resource listing from within a jar file
      * @param clazz The class to use the {@link ClassLoader} of
      * @param path The path within the classpath to list resources from
-     * @return An array containing all the path of all resources within the specified directory
+     * @return An array containing the path of all resources within the specified directory,
+     *         relative to it and including any nested directories
      * @throws URISyntaxException
      * @throws IOException
      */
     public static String[] getResourceListing(Class clazz, String path) throws URISyntaxException, IOException {
         var dirURL = clazz.getClassLoader().getResource(path);
 
-        // list use File#list in case path is just a regular file
+        // walk the directory in case path is just a regular file
         if (dirURL != null && dirURL.getProtocol().equals("file")) {
-            return new File(dirURL.toURI()).list();
+            var root = Path.of(dirURL.toURI());
+            try (var files = Files.walk(root)) {
+                return files.filter(Files::isRegularFile)
+                        .map(file -> root.relativize(file).toString())
+                        .toArray(String[]::new);
+            }
         }
 
         if (dirURL == null) {
@@ -43,17 +50,12 @@ public class ResourceUtils {
             try (var jar = new JarFile(URLDecoder.decode(jarPath, StandardCharsets.UTF_8))) {
                 // get all files within the jar
                 var entries = jar.entries();
-                var result = new HashSet<>();
+                var result = new HashSet<String>();
 
                 while(entries.hasMoreElements()) {
                     var name = entries.nextElement().getName();
-                    if (name.startsWith(path)) {
-                        var entry = name.substring(path.length());
-                        int checkSubdir = entry.indexOf("/");
-                        if (checkSubdir >= 0) {
-                            entry = entry.substring(0, checkSubdir);
-                        }
-                        result.add(entry);
+                    if (name.startsWith(path) && !name.endsWith("/")) {
+                        result.add(name.substring(path.length()));
                     }
                 }
 
